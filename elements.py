@@ -20,6 +20,9 @@ class RadioElement:
     child_elems: dict  # dict of int -> Elem
     selected: int = 0
 
+def f(event):
+    print("f", event)
+
 def button():
     e = document.createElement("button")
     e.className = "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
@@ -51,8 +54,8 @@ def set_attributes(e, **kwargs):
         e.setAttribute(k, v)
 
 
-def slider(state: SliderElement):
-    slider = document.createElement("div")
+def slider(state: SliderElement, cb):
+    slider_el = document.createElement("div")
     e = document.createElement("input")
     e.className = "mdl-slider mdl-js-slider"
     slider_id = f"{state.docid}"
@@ -65,7 +68,7 @@ def slider(state: SliderElement):
         value=f"{state.value}",
         tabindex="0",
     )
-    slider.appendChild(e)
+    slider_el.appendChild(e)
 
     value_display = document.createElement("div")
     value_display.innerHTML = f"{state.value}"
@@ -75,11 +78,11 @@ def slider(state: SliderElement):
         value_display.innerHTML = e.value
 
     add_event_listener(e, "input", update_value_display)
-    add_event_listener(e, "change", build)
+    add_event_listener(e, "change", cb)
     componentHandler.upgradeElement(e)
-    return make_cols([(slider, 11), (value_display, 1)])
+    return make_cols([(slider_el, 11), (value_display, 1)])
 
-def radio(state: RadioElement):
+def radio(state: RadioElement, cb):
     container = document.createElement("div")
     container.className = "container"
     for ix, option in enumerate(state.options):
@@ -100,7 +103,46 @@ def radio(state: RadioElement):
         label.appendChild(span)
         if ix == state.selected:
             inputelem.setAttribute("checked", "checked")
-        add_event_listener(inputelem, "click", build)
+        add_event_listener(inputelem, "click", cb)
         container.appendChild(label)
     # componentHandler.upgradeElement(container)
     return container
+
+
+class App:
+    def __init__(self, state):
+        self.state = state
+    
+
+    def render(self):
+        app = document.getElementById("app")
+        app.innerHTML = ""
+        for k, v in self.state.items():
+            if isinstance(v, SliderElement):
+                app.appendChild(slider(v, self.build))
+            elif isinstance(v, RadioElement):
+                app.appendChild(radio(v, self.build))
+        app.appendChild(button())
+
+    def update_state(self):
+        for k, v in self.state.items():
+            # if isinstance(v, dict):
+            #     self.update_state(v)
+            if isinstance(v, SliderElement):
+                e = document.getElementById(f"{v.docid}")
+                v = int(e.value)
+                self.state[k].value = v
+            if isinstance(v, RadioElement):
+                pass
+                # for ix,option in enumerate(v.options):
+                #     e = document.getElementById(f"{v.docid}_{option}")
+                #     if e.checked:
+                #         v.selected = ix
+                #         print("selected", option)
+
+
+    def build(self, event):
+        if event is not None:
+            self.update_state()
+
+        self.render()
