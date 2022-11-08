@@ -20,9 +20,6 @@ class RadioElement:
     child_elems: dict  # dict of int -> Elem
     selected: int = 0
 
-def f(event):
-    print("f", event)
-
 def button(cb):
     evt_handler = """(event) => {Pyscript.globals.get('f')(event)};"""
     e = document.createElement("button")
@@ -60,9 +57,6 @@ def set_attributes(e, **kwargs):
     for k, v in kwargs.items():
         e.setAttribute(k, v)
 
-def bool2str(b):
-    return "true" if b else "false"
-
 def checkbox(state, cb):
     # <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="checkbox-1">
     #   <input type="checkbox" id="checkbox-1" class="mdl-checkbox__input" checked>
@@ -77,14 +71,16 @@ def checkbox(state, cb):
     input_el.setAttribute("id", state["docid"])
     if state["enabled"]:
         input_el.setAttribute("checked", "checked")
-    # input_el.setAttribute("checked", bool2str(state["enabled"]))
-    # span_el = document.createElement("span")
-    # span_el.className = "mdl-checkbox__label"
-    # span_el.appendChild(document.createTextNode("Enabled"))
     label_el.appendChild(input_el)
-    # label_el.appendChild(span_el)
+    span_el = document.createElement("span")
+    span_el.className = "mdl-checkbox__label"
+    span_el.appendChild(document.createTextNode(state["heading"]))
+    label_el.appendChild(span_el)
     componentHandler.upgradeElement(label_el)
-    add_event_listener(input_el, "change", cb)
+    def toggle(_):
+        state["enabled"] = not state["enabled"]
+        cb(None)
+    add_event_listener(input_el, "change", toggle)
     return label_el
 
 def block_option(ix, state, cb):
@@ -107,9 +103,13 @@ def block_option(ix, state, cb):
 
 def render_block(state, cb):
     block_el = document.createElement("div")
-    set_attributes(block_el, style="border-style: solid; border-width: 1px; border-radius: 5px; border-color: gray;  padding: 10px;")
-    # block_el.appendChild(checkbox(state, cb))
-    row_els = [(checkbox(state, cb), 1)]
+    block_el.className = "block-el"
+    block_title = document.createElement("div")
+    block_title.className = "block-title"
+    block_title.appendChild(checkbox(state, cb))
+    block_el.appendChild(block_title)
+
+    row_els = []
     for ix, _ in enumerate(state["options"]):
         row_els.append((block_option(ix, state, cb), 3))
     block_el.appendChild(make_cols(row_els))
@@ -188,31 +188,11 @@ class App:
             print(self.state)
             self.state["ml_training"]["enabled"] = not self.state["ml_training"]["enabled"]
             self.build(None)
-        app.appendChild(button(mycb))
-
-    def update_state(self):
-        for k, v in self.state.items():
-            # print("checked", document.getElementById(v["docid"]).checked)
-            v["enabled"] = document.getElementById(v["docid"]).checked
-            # print(v)
-
-            # if isinstance(v, dict):
-            #     self.update_state(v)
-            # if isinstance(v, SliderElement):
-            #     e = document.getElementById(f"{v.docid}")
-            #     v = int(e.value)
-            #     self.state[k].value = v
-            # if isinstance(v, RadioElement):
-            #     pass
-            #     # for ix,option in enumerate(v.options):
-            #     #     e = document.getElementById(f"{v.docid}_{option}")
-            #     #     if e.checked:
-            #     #         v.selected = ix
-            #     #         print("selected", option)
-
+        # app.appendChild(button(mycb))
+        app.appendChild(document.createTextNode(f"{self.state}"))
 
     def build(self, event):
-        if event is not None:
-            self.update_state()
+        # if event is not None:
+        #     self.update_state()
 
         self.render()

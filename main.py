@@ -18,7 +18,11 @@ import elements as e
 #     ),
 # )
 
-state = dict(ml_training=dict(enabled=True, docid="tr", options=["a", "b"], selected=0))
+state = dict(
+    ml_training=dict(
+        enabled=True, heading="ML Training", docid="tr", options=["a", "b"], selected=0
+    )
+)
 
 
 def main():

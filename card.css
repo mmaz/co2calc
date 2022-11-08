@@ -1,3 +1,21 @@
+.block-el {
+    border-style: solid;
+    border-width: 1px;
+    border-color: gray;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    padding-bottom: 6px;
+}
+.block-title {
+  background: #d1d1d1;
+  /* color: #ffffff; */
+  font-weight: bold;
+  margin-top: 0px;
+  margin-left: 0px;
+  margin-right: 0px;
+  padding: 5px;
+  margin-bottom: 4px;
+}
 
 .mdl-card-mini{
     min-height: 50px;
