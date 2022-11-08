@@ -78,20 +78,41 @@ def checkbox(state, cb):
     if state["enabled"]:
         input_el.setAttribute("checked", "checked")
     # input_el.setAttribute("checked", bool2str(state["enabled"]))
-    span_el = document.createElement("span")
-    span_el.className = "mdl-checkbox__label"
-    span_el.appendChild(document.createTextNode("Enabled"))
+    # span_el = document.createElement("span")
+    # span_el.className = "mdl-checkbox__label"
+    # span_el.appendChild(document.createTextNode("Enabled"))
     label_el.appendChild(input_el)
-    label_el.appendChild(span_el)
+    # label_el.appendChild(span_el)
     componentHandler.upgradeElement(label_el)
     add_event_listener(input_el, "change", cb)
     return label_el
+
+def block_option(ix, state, cb):
+    card_el = document.createElement("div")
+    if ix == state["selected"]:
+        shadow = "mdl-card-active mdl-shadow--4dp"
+    else:
+        shadow = "mdl-card-inactive mdl-shadow--2dp"
+    card_el.className = f"mdl-card mdl-card-mini {shadow}"
+    supporting_el = document.createElement("div")
+    supporting_el.className = "mdl-card__supporting-text"
+    supporting_el.appendChild(document.createTextNode(state["options"][ix]))
+    card_el.appendChild(supporting_el)
+    def new_selection(_):
+        state["selected"] = ix
+        cb(None)
+    add_event_listener(card_el, "click", new_selection)
+    return card_el
 
 
 def render_block(state, cb):
     block_el = document.createElement("div")
     set_attributes(block_el, style="border-style: solid; border-width: 1px; border-radius: 5px; border-color: gray;  padding: 10px;")
-    block_el.appendChild(checkbox(state, cb))
+    # block_el.appendChild(checkbox(state, cb))
+    row_els = [(checkbox(state, cb), 1)]
+    for ix, _ in enumerate(state["options"]):
+        row_els.append((block_option(ix, state, cb), 3))
+    block_el.appendChild(make_cols(row_els))
     return block_el
 
 def slider(state: SliderElement, cb):
@@ -164,6 +185,7 @@ class App:
         #     elif isinstance(v, RadioElement):
         #         app.appendChild(radio(v, self.build))
         def mycb():
+            print(self.state)
             self.state["ml_training"]["enabled"] = not self.state["ml_training"]["enabled"]
             self.build(None)
         app.appendChild(button(mycb))

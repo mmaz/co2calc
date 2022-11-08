@@ -7,6 +7,7 @@
     <title>CO2 Footprint Calculator</title>
     <link rel="icon" type="image/png" href="favicon.png" />
 
+
     <link rel="stylesheet" href="assets/pyscript.css" />
     <script defer src="assets/pyscript.min.js"></script>
 
@@ -16,10 +17,24 @@
     <link rel="stylesheet" href="assets/icon.css">
     <link rel="stylesheet" href="assets/material.indigo-pink.min.css">
     <script defer src="assets/material.min.js"></script>
+    <link rel="stylesheet" href="card.css" />
   </head>
 
   <body>
     <div id="app"></div>
+
+
+    <div class="mdl-card  mdl-card-mini mdl-shadow--2dp" onmouseover="console.log('a');" onclick="console.log('b');" onmouseleave="console.log('q');">
+      <!-- <div class="mdl-card__title">
+        <h2 class="mdl-card__title-text">title Text Goes Here</h2>
+      </div> -->
+      <div class="mdl-card__supporting-text">
+        This text might describe the photo and provide further information, such as where and
+        when it was taken.
+      </div>
+    </div>
+
+
     <!-- local dev -->
     <py-config type="toml">
       paths = ["./elements.py"]
