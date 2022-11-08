@@ -20,8 +20,34 @@ import elements as e
 
 state = dict(
     ml_training=dict(
-        enabled=True, heading="ML Training", docid="tr", options=["a", "b"], selected=0
-    )
+        enabled=True,
+        heading="ML Training",
+        docid="tr",
+        options=[e.BlockOption(desc="DenseNet", footprint=0.1)],
+        selected=0,
+    ),
+    casing=dict(
+        enabled=True,
+        heading="Casing",
+        docid="casing",
+        options=[
+            e.BlockOption(desc="small", footprint=0.04),
+            e.BlockOption(desc="medium", footprint=0.27),
+            e.BlockOption(desc="large", footprint=0.63),
+        ],
+        selected=0,
+    ),
+    connectivity=dict(
+        enabled=True,
+        heading="Processing",
+        docid="processing",
+        options=[
+            e.BlockOption(desc="ARM Coretex M4", footprint=0.08),
+            e.BlockOption(desc="Broadcom XYZ", footprint=0.17),
+            e.BlockOption(desc="SnapDragon ABC", footprint=0.29),
+        ],
+        selected=0,
+    ),
 )
 
 

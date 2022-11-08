@@ -3,6 +3,23 @@ from pyodide.ffi.wrappers import add_event_listener
 from pyodide.code import run_js
 from dataclasses import dataclass
 
+@dataclass
+class BlockOption:
+    desc: str
+    footprint: float
+
+def render_block_option(o):
+    supporting_el_html = document.createElement("span")
+    desc_el = document.createElement("span")
+    desc_el.appendChild(document.createTextNode(o.desc))
+    br_el = document.createElement("br")
+    footprint_el = document.createElement("span")
+    footprint_el.className = "footprint"
+    footprint_el.appendChild(document.createTextNode(f"{o.footprint} kg CO2e"))
+
+    for e in [desc_el, br_el, footprint_el]:
+        supporting_el_html.appendChild(e)
+    return supporting_el_html
 
 @dataclass
 class SliderElement:
@@ -21,7 +38,6 @@ class RadioElement:
     selected: int = 0
 
 def button(cb):
-    evt_handler = """(event) => {Pyscript.globals.get('f')(event)};"""
     e = document.createElement("button")
     e.className = "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
     e.appendChild(document.createTextNode("Build"))
@@ -85,14 +101,17 @@ def checkbox(state, cb):
 
 def block_option(ix, state, cb):
     card_el = document.createElement("div")
-    if ix == state["selected"]:
-        shadow = "mdl-card-active mdl-shadow--4dp"
+    if ix == state["selected"]: 
+        if state["enabled"]:
+            shadow = "mdl-card-active mdl-shadow--4dp"
+        else:
+            shadow = "mdl-card-ignore mdl-shadow--4dp"
     else:
         shadow = "mdl-card-inactive mdl-shadow--2dp"
     card_el.className = f"mdl-card mdl-card-mini {shadow}"
     supporting_el = document.createElement("div")
     supporting_el.className = "mdl-card__supporting-text"
-    supporting_el.appendChild(document.createTextNode(state["options"][ix]))
+    supporting_el.appendChild(render_block_option(state["options"][ix]))
     card_el.appendChild(supporting_el)
     def new_selection(_):
         state["selected"] = ix
@@ -169,6 +188,14 @@ def radio(state: RadioElement, cb):
     # componentHandler.upgradeElement(container)
     return container
 
+def totalCO2(state):
+    sum_co2 = 0
+    for k, v in state.items():
+        if v["enabled"]:
+            sum_co2 += v["options"][v["selected"]].footprint
+    sum_el = document.createElement("div")
+    sum_el.appendChild(document.createTextNode(f"Total: {sum_co2:0.2f} kg CO2e"))
+    return sum_el   
 
 class App:
     def __init__(self, state):
@@ -189,7 +216,8 @@ class App:
             self.state["ml_training"]["enabled"] = not self.state["ml_training"]["enabled"]
             self.build(None)
         # app.appendChild(button(mycb))
-        app.appendChild(document.createTextNode(f"{self.state}"))
+        # app.appendChild(document.createTextNode(f"{self.state}"))
+        app.appendChild(totalCO2(self.state))
 
     def build(self, event):
         # if event is not None:
