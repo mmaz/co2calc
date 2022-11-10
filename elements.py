@@ -1,7 +1,13 @@
-from js import document, componentHandler
+from dataclasses import dataclass
+import json
+
+import plotly
+import plotly.express as px
+import pandas as pd
+
+from js import document, componentHandler, plotly_render
 from pyodide.ffi.wrappers import add_event_listener
 from pyodide.code import run_js
-from dataclasses import dataclass
 
 @dataclass
 class BlockOption:
@@ -197,6 +203,26 @@ def totalCO2(state):
     sum_el.appendChild(document.createTextNode(f"Total: {sum_co2:0.2f} kg CO2e"))
     return sum_el   
 
+def plot(state):
+    # df = pd.DataFrame(
+    # fig = px.bar(x=["a", "b", "c"], y=[1, 3, 2])
+    footprint = {"system": [], "component": [], "co2e": []}
+    sum_co2 = 0
+    for k, v in state.items():
+        if v["enabled"]:
+            footprint["system"].append("TinyML")
+            footprint["component"].append(v["heading"])
+            co2e = v["options"][v["selected"]].footprint
+            footprint["co2e"].append(co2e)
+            sum_co2 += co2e
+    df = pd.DataFrame(footprint)
+    fig = px.bar(df, x="system", y="co2e", color="component")
+    fig.update_layout(autosize=False, width=300, height=400)
+    max_footprint = max(1.5, sum_co2)
+    fig.update_yaxes(range=[0, max_footprint])
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    plotly_render(graphJSON,"graph")
+
 class App:
     def __init__(self, state):
         self.state = state
@@ -218,6 +244,11 @@ class App:
         # app.appendChild(button(mycb))
         # app.appendChild(document.createTextNode(f"{self.state}"))
         app.appendChild(totalCO2(self.state))
+
+        graph_el = document.createElement("div")
+        graph_el.setAttribute("id", "graph")
+        app.appendChild(graph_el)
+        plot(self.state)
 
     def build(self, event):
         # if event is not None:
