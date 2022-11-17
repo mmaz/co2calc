@@ -129,6 +129,7 @@ def block_option(ix, state, cb):
 def render_block(state, cb):
     block_el = document.createElement("div")
     block_el.className = "block-el"
+    block_el.setAttribute("style", "margin-left: 10px; margin-right: 10px;")
     block_title = document.createElement("div")
     block_title.className = "block-title"
     block_title.appendChild(checkbox(state, cb))
@@ -206,17 +207,18 @@ def totalCO2(state):
 def plot(state):
     # df = pd.DataFrame(
     # fig = px.bar(x=["a", "b", "c"], y=[1, 3, 2])
-    footprint = {"system": [], "component": [], "co2e": []}
+    co2 = "kg CO2"
+    footprint = {"system": [], "component": [], co2: []}
     sum_co2 = 0
     for k, v in state.items():
         if v["enabled"]:
             footprint["system"].append("TinyML")
             footprint["component"].append(v["heading"])
             co2e = v["options"][v["selected"]].footprint
-            footprint["co2e"].append(co2e)
+            footprint[co2].append(co2e)
             sum_co2 += co2e
     df = pd.DataFrame(footprint)
-    fig = px.bar(df, x="system", y="co2e", color="component")
+    fig = px.bar(df, x="system", y=co2, color="component")
     fig.update_layout(autosize=False, width=300, height=400)
     max_footprint = max(1.5, sum_co2)
     fig.update_yaxes(range=[0, max_footprint])
