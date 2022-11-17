@@ -9,6 +9,8 @@ from js import document, componentHandler, plotly_render
 from pyodide.ffi.wrappers import add_event_listener
 from pyodide.code import run_js
 
+import ACT_model
+
 @dataclass
 class BlockOption:
     desc: str
@@ -247,10 +249,20 @@ class App:
         # app.appendChild(document.createTextNode(f"{self.state}"))
         app.appendChild(totalCO2(self.state))
 
+        jload = ACT_model.foo()
+        print(f"{jload=}")
+        je = document.createTextNode(f"{jload}")
+        rje = document.createElement("div")
+        rje.appendChild(je)
+        app.appendChild(rje)
+
         graph_el = document.createElement("div")
         graph_el.setAttribute("id", "graph")
         app.appendChild(graph_el)
+
+
         plot(self.state)
+
 
     def build(self, event):
         # if event is not None:
