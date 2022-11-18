@@ -1,5 +1,29 @@
-.footprint {
+.calcsection {
+  margin-top: 4px;
+  padding: 8px;
+  border-radius: 4px;
+  border-style: solid;
+  border-width: 3px;
+  border-color: #6610f2;
+}
+.mdl-card__supporting-text-mmaz {
     font-size: x-small;
+    padding: 4px;
+    padding-top: 4px;
+    padding-right: 4px;
+    padding-bottom: 8px;
+    padding-left: 8px;
+    width: 90%;
+}
+.footprint {
+    font-size: smaller;
+    font-weight: lighter;
+}
+.mdl-card-mmaz {
+    min-height: 45px;
+    height: 45px;
+    width: 125px;
+    /* color: #ffffff; */
 }
 .block-el {
     border-style: solid;
@@ -20,11 +44,6 @@
   margin-bottom: 4px;
 }
 
-.mdl-card-mini{
-    min-height: 50px;
-    width: 125px;
-    /* color: #ffffff; */
-}
 
 /* .mdl-card-mini, .mdl-card__supporting-text{
     color: #ffffff;

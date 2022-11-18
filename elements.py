@@ -1,5 +1,7 @@
+from typing import Optional
 from dataclasses import dataclass
 import json
+from functools import partial
 
 import plotly
 import plotly.express as px
@@ -9,25 +11,35 @@ from js import document, componentHandler, plotly_render
 from pyodide.ffi.wrappers import add_event_listener
 from pyodide.code import run_js
 
-import ACT_model
+import ACT_model as ACT_model
+
 
 @dataclass
 class BlockOption:
     desc: str
     footprint: float
+    act_desc: Optional[str] = None
+    act_param: Optional[str] = None
+
+
 
 def render_block_option(o):
     supporting_el_html = document.createElement("span")
     desc_el = document.createElement("span")
     desc_el.appendChild(document.createTextNode(o.desc))
     br_el = document.createElement("br")
+    if o.act_desc is not None:
+        footnote_desc = document.createTextNode(f"{o.act_desc}")
+    else:
+        footnote_desc = document.createTextNode(f"{o.footprint:.2f} kg CO2e")
     footprint_el = document.createElement("span")
     footprint_el.className = "footprint"
-    footprint_el.appendChild(document.createTextNode(f"{o.footprint} kg CO2e"))
+    footprint_el.appendChild(footnote_desc)
 
     for e in [desc_el, br_el, footprint_el]:
         supporting_el_html.appendChild(e)
     return supporting_el_html
+
 
 @dataclass
 class SliderElement:
@@ -45,19 +57,22 @@ class RadioElement:
     child_elems: dict  # dict of int -> Elem
     selected: int = 0
 
+
 def button(cb):
     e = document.createElement("button")
     e.className = "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
     e.appendChild(document.createTextNode("Build"))
     componentHandler.upgradeElement(e)
-    #add_event_listener(e, "click", "Pyscript.globals.get('f')();")
+    # add_event_listener(e, "click", "Pyscript.globals.get('f')();")
     # e.setAttribute("onclick", evt_handler)
     def modify_state(_):
         cb()
+
     # e.setAttribute("onclick", "Pyscript.globals.get('f')();")
     # e.setAttribute("onclick", "Pyscript.globals.get('f')();")
     add_event_listener(e, "click", modify_state)
     return e
+
 
 def make_cols(row_elems):
     """
@@ -81,6 +96,7 @@ def set_attributes(e, **kwargs):
     for k, v in kwargs.items():
         e.setAttribute(k, v)
 
+
 def checkbox(state, cb):
     # <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="checkbox-1">
     #   <input type="checkbox" id="checkbox-1" class="mdl-checkbox__input" checked>
@@ -101,29 +117,34 @@ def checkbox(state, cb):
     span_el.appendChild(document.createTextNode(state["heading"]))
     label_el.appendChild(span_el)
     componentHandler.upgradeElement(label_el)
+
     def toggle(_):
         state["enabled"] = not state["enabled"]
         cb(None)
+
     add_event_listener(input_el, "change", toggle)
     return label_el
 
+
 def block_option(ix, state, cb):
     card_el = document.createElement("div")
-    if ix == state["selected"]: 
+    if ix == state["selected"]:
         if state["enabled"]:
             shadow = "mdl-card-active mdl-shadow--4dp"
         else:
             shadow = "mdl-card-ignore mdl-shadow--4dp"
     else:
         shadow = "mdl-card-inactive mdl-shadow--2dp"
-    card_el.className = f"mdl-card mdl-card-mini {shadow}"
+    card_el.className = f"mdl-card mdl-card-mmaz {shadow}"
     supporting_el = document.createElement("div")
-    supporting_el.className = "mdl-card__supporting-text"
+    supporting_el.className = "mdl-card__supporting-text mdl-card__supporting-text-mmaz"
     supporting_el.appendChild(render_block_option(state["options"][ix]))
     card_el.appendChild(supporting_el)
+
     def new_selection(_):
         state["selected"] = ix
         cb(None)
+
     add_event_listener(card_el, "click", new_selection)
     return card_el
 
@@ -142,6 +163,7 @@ def render_block(state, cb):
         row_els.append((block_option(ix, state, cb), 3))
     block_el.appendChild(make_cols(row_els))
     return block_el
+
 
 def slider(state: SliderElement, cb):
     slider_el = document.createElement("div")
@@ -171,6 +193,7 @@ def slider(state: SliderElement, cb):
     componentHandler.upgradeElement(e)
     return make_cols([(slider_el, 11), (value_display, 1)])
 
+
 def radio(state: RadioElement, cb):
     container = document.createElement("div")
     container.className = "container"
@@ -197,6 +220,7 @@ def radio(state: RadioElement, cb):
     # componentHandler.upgradeElement(container)
     return container
 
+
 def totalCO2(state):
     sum_co2 = 0
     for k, v in state.items():
@@ -204,7 +228,8 @@ def totalCO2(state):
             sum_co2 += v["options"][v["selected"]].footprint
     sum_el = document.createElement("div")
     sum_el.appendChild(document.createTextNode(f"Total: {sum_co2:0.2f} kg CO2e"))
-    return sum_el   
+    return sum_el
+
 
 def plot(state):
     # df = pd.DataFrame(
@@ -212,7 +237,7 @@ def plot(state):
     co2 = "kg CO2"
     footprint = {"system": [], "component": [], co2: []}
     sum_co2 = 0
-    for k, v in state.items():
+    for k, v in state["tinyml"].items():
         if v["enabled"]:
             footprint["system"].append("TinyML")
             footprint["component"].append(v["heading"])
@@ -225,44 +250,113 @@ def plot(state):
     max_footprint = max(1.5, sum_co2)
     fig.update_yaxes(range=[0, max_footprint])
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    plotly_render(graphJSON,"graph")
+    plotly_render(graphJSON, "graph")
+
+
+def collapse_icon(elemid: str):
+    icon_container = document.createElement("span")
+    icon_container.setAttribute("style", "margin-left: 4px;")
+    icon = document.createElement("span")
+    icon.className = "icon material-icons mdl-color-text--grey-600"
+    icon.setAttribute("id", elemid)
+    icon.appendChild(document.createTextNode("settings"))
+    # tooltip = document.createElement("span")
+    # tooltip.className = "mdl-tooltip--right"
+    # tooltip.setAttribute("for", elemid)
+    # tooltip.appendChild(document.createTextNode("Collapse"))
+    icon_container.appendChild(icon)
+    # icon_container.appendChild(tooltip)
+    componentHandler.upgradeElement(icon)
+    # componentHandler.upgradeElement(tooltip)
+    return icon_container
+
+
+def collapse_byid(elemid, _):
+    config = document.getElementById(elemid)
+    if config.style.display == "none":
+        config.style.display = "block"
+    else:
+        config.style.display = "none"
+
 
 class App:
     def __init__(self, state):
+        assert "act" in state
+        assert "tinyml" in state
         self.state = state
-    
 
     def render(self):
         app = document.getElementById("app")
         app.innerHTML = ""
-        for k, v in self.state.items():
-            app.appendChild(render_block(v, self.build))
-        #     if isinstance(v, SliderElement):
-        #         app.appendChild(slider(v, self.build))
-        #     elif isinstance(v, RadioElement):
-        #         app.appendChild(radio(v, self.build))
-        def mycb():
-            print(self.state)
-            self.state["ml_training"]["enabled"] = not self.state["ml_training"]["enabled"]
-            self.build(None)
+        main_div = document.createElement("div")
+        main_div.className = "container"
+        app.appendChild(main_div)
+
+        main_row = document.createElement("div")
+        main_row.className = "row"
+        main_div.appendChild(main_row)
+
+        graph_container = document.createElement("div")
+        graph_container.className = "col-lg-4"
+        main_row.appendChild(graph_container)
+
+        config_container = document.createElement("div")
+        config_container.className = "col-lg-8"
+        main_row.appendChild(config_container)
+
+        tinyml_container = document.createElement("div")
+        tinyml_container.className = "calcsection"
+        tinyml_container.appendChild(document.createTextNode("TinyML"))
+
+        ci_tiny = collapse_icon("tinyml_collapse")
+
+        add_event_listener(ci_tiny, "click", partial(collapse_byid, "tinyml_configuration"))
+        tinyml_container.appendChild(ci_tiny)
+        config_container.appendChild(tinyml_container)
+
+        tinyml_inner_container = document.createElement("div")
+        tinyml_inner_container.setAttribute("id", "tinyml_configuration")
+        tinyml_container.appendChild(tinyml_inner_container)
+
+        act_container = document.createElement("div")
+        act_container.className = "calcsection"
+        act_container.appendChild(document.createTextNode("Traditional Server (ACT)"))
+
+        ci_act = collapse_icon("act_collapse")
+        add_event_listener(ci_act, "click", partial(collapse_byid, "act_configuration"))
+        act_container.appendChild(ci_act)
+        config_container.appendChild(act_container)
+
+        act_inner_container = document.createElement("div")
+        act_inner_container.setAttribute("id", "act_configuration")
+        act_container.appendChild(act_inner_container)
+
+        for k, v in self.state["tinyml"].items():
+            tinyml_inner_container.appendChild(render_block(v, self.build))
+
+        for k, v in self.state["act"].items():
+            act_inner_container.appendChild(render_block(v, self.build))
+
+        # def mycb():
+        #     print(self.state)
+        #     self.state["ml_training"]["enabled"] = not self.state["ml_training"]["enabled"]
+        #     self.build(None)
         # app.appendChild(button(mycb))
         # app.appendChild(document.createTextNode(f"{self.state}"))
-        app.appendChild(totalCO2(self.state))
+        app.appendChild(totalCO2(self.state["tinyml"]))
 
-        jload = ACT_model.foo()
+        jload = ACT_model.model(self.state["act"])
         print(f"{jload=}")
         je = document.createTextNode(f"{jload}")
         rje = document.createElement("div")
         rje.appendChild(je)
-        app.appendChild(rje)
+        graph_container.appendChild(rje)
 
         graph_el = document.createElement("div")
         graph_el.setAttribute("id", "graph")
-        app.appendChild(graph_el)
-
+        graph_container.appendChild(graph_el)
 
         plot(self.state)
-
 
     def build(self, event):
         # if event is not None:

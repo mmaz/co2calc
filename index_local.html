@@ -16,7 +16,7 @@
     <link href="assets/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
     <script src="assets/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
 
-    <link rel="stylesheet" href="assets/icon.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="assets/material.indigo-pink.min.css">
     <script defer src="assets/material.min.js"></script>
     <link rel="stylesheet" href="card.css" />
@@ -46,8 +46,12 @@
     <py-config type="toml">
       packages = ["numpy", "pandas", "plotly"]
       paths = [ "./elements.py"
-              , "./ACT_model.py"
+              , "./ACT/ACT_model.py"
               , "./ACT/dram_model.py"
+              , "./ACT/logic_model.py"
+              , "./ACT/ssd_model.py"
+              , "./ACT/hdd_model.py"
+              , "./ACT/model.py"
               , "./ACT/ACT_json.py"
               ]
     </py-config>

@@ -1,24 +1,46 @@
-from js import document, componentHandler
-
-# https://jeff.glass/post/whats-new-pyscript-2022-09-1/
-from pyodide.ffi.wrappers import add_event_listener
-from pyodide.code import run_js
-from dataclasses import dataclass
 import elements as e
 
+act_state = dict(
+    cpu_node=dict(
+        enabled=True,
+        heading="CPU Process Node",
+        docid="cpu_process_node",
+        options=[
+            e.BlockOption(
+                desc="Intel Xeon/Dell R740",
+                footprint=0,
+                act_desc="28nm",
+                act_param="28nm",
+            ),
+            e.BlockOption(
+                desc="Ivy Bridge", footprint=0, act_desc="14nm", act_param="14nm"
+            ),
+        ],
+        selected=0,
+    ),
+    dram=dict(
+        enabled=True,
+        heading="DRAM",
+        docid="dram_footprint",
+        options=[
+            e.BlockOption(
+                desc="36 GB",
+                footprint=0,
+                act_desc="32 GB + 4 ECC GB x 1",
+                act_param="1",
+            ),
+            e.BlockOption(
+                desc="144 GB",
+                footprint=0,
+                act_desc="32 GB + 4 ECC GB x 4",
+                act_param="4",
+            ),
+        ],
+        selected=0,
+    ),
+)
 
-# state = dict(
-#     a=e.SliderElement("a"),
-#     b=e.SliderElement("b"),
-#     c=e.SliderElement("c"),
-#     d=e.RadioElement(
-#         docid="d",
-#         options=["disabled", "enabled"],
-#         child_elems={1: e.SliderElement("i", max=50)},
-#     ),
-# )
-
-state = dict(
+tinyml_state = dict(
     ml_training=dict(
         enabled=True,
         heading="ML Training",
@@ -52,7 +74,7 @@ state = dict(
 
 
 def main():
-    app = e.App(state)
+    app = e.App(dict(act=act_state, tinyml=tinyml_state))
     app.build(None)
 
 
