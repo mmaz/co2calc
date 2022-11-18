@@ -231,11 +231,11 @@ def totalCO2(state):
     return sum_el
 
 
-def plot(state):
-    # df = pd.DataFrame(
-    # fig = px.bar(x=["a", "b", "c"], y=[1, 3, 2])
+def plot(state, act_footprint):
+    # footprint = {"system": [], "component": [], co2: []}
+    footprint = {}
+    footprint.update(act_footprint)
     co2 = "kg CO2"
-    footprint = {"system": [], "component": [], co2: []}
     sum_co2 = 0
     for k, v in state["tinyml"].items():
         if v["enabled"]:
@@ -246,9 +246,9 @@ def plot(state):
             sum_co2 += co2e
     df = pd.DataFrame(footprint)
     fig = px.bar(df, x="system", y=co2, color="component")
-    fig.update_layout(autosize=False, width=300, height=400)
-    max_footprint = max(1.5, sum_co2)
-    fig.update_yaxes(range=[0, max_footprint])
+    fig.update_layout(autosize=False, width=400, height=700)
+    # max_footprint = max(1.5, sum_co2)
+    # fig.update_yaxes(range=[0, max_footprint])
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     plotly_render(graphJSON, "graph")
 
@@ -297,11 +297,11 @@ class App:
         main_div.appendChild(main_row)
 
         graph_container = document.createElement("div")
-        graph_container.className = "col-lg-4"
+        graph_container.className = "col-lg-5"
         main_row.appendChild(graph_container)
 
         config_container = document.createElement("div")
-        config_container.className = "col-lg-8"
+        config_container.className = "col-lg-7"
         main_row.appendChild(config_container)
 
         tinyml_container = document.createElement("div")
@@ -345,18 +345,18 @@ class App:
         # app.appendChild(document.createTextNode(f"{self.state}"))
         app.appendChild(totalCO2(self.state["tinyml"]))
 
-        jload = ACT_model.model(self.state["act"])
-        print(f"{jload=}")
-        je = document.createTextNode(f"{jload}")
-        rje = document.createElement("div")
-        rje.appendChild(je)
-        graph_container.appendChild(rje)
+        act_footprint = ACT_model.model(self.state["act"])
+        #print(f"{jload=}")
+        #je = document.createTextNode(f"{jload}")
+        #rje = document.createElement("div")
+        #rje.appendChild(je)
+        #graph_container.appendChild(rje)
 
         graph_el = document.createElement("div")
         graph_el.setAttribute("id", "graph")
         graph_container.appendChild(graph_el)
 
-        plot(self.state)
+        plot(self.state, act_footprint)
 
     def build(self, event):
         # if event is not None:
