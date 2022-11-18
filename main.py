@@ -18,6 +18,58 @@ act_state = dict(
         ],
         selected=0,
     ),
+    cpu_count=dict(
+        enabled=True,
+        heading="CPU Count",
+        docid="cpu_count",
+        options=[
+            e.BlockOption(desc="1 CPU", footprint=0, act_desc="", act_param=1),
+            e.BlockOption(desc="2 CPUs", footprint=0, act_desc="", act_param=2),
+            e.BlockOption(desc="4 CPUs", footprint=0, act_desc="", act_param=4),
+            e.BlockOption(desc="8 CPUs", footprint=0, act_desc="", act_param=8),
+        ],
+        selected=1,
+    ),
+    #   "coal"       : 820,
+    #   "gas"        : 490,
+    #   "biomass"    : 230,
+    #   "solar"      : 41,
+    #   "geothermal" : 38,
+    #   "hydropower" : 24,
+    #   "nuclear"    : 12,
+    #   "wind"       : 11
+    energy_source=dict(
+        enabled=True,
+        heading="Energy Source",
+        docid="energy_source",
+        options=[
+            e.BlockOption(
+                desc="Coal",
+                footprint=0,
+                act_desc="820",
+                act_param="coal",
+            ),
+            e.BlockOption(
+                desc="Natural Gas",
+                footprint=0,
+                act_desc="490",
+                act_param="gas",
+            ),
+            e.BlockOption(
+                desc="Solar",
+                footprint=0,
+                act_desc="41",
+                act_param="solar",
+            ),
+            e.BlockOption(
+                desc="Nuclear",
+                footprint=0,
+                act_desc="12",
+                act_param="nuclear",
+            ),
+        ],
+        selected=0,
+    ),
     dram=dict(
         enabled=True,
         heading="DRAM",
@@ -27,16 +79,28 @@ act_state = dict(
                 desc="36 GB",
                 footprint=0,
                 act_desc="32 GB + 4 ECC GB x 1",
-                act_param="1",
+                act_param=1,
             ),
             e.BlockOption(
                 desc="144 GB",
                 footprint=0,
                 act_desc="32 GB + 4 ECC GB x 4",
-                act_param="4",
+                act_param=4,
+            ),
+            e.BlockOption(
+                desc="288 GB",
+                footprint=0,
+                act_desc="32 GB + 4 ECC GB x 8",
+                act_param=8,
+            ),
+            e.BlockOption(
+                desc="432 GB",
+                footprint=0,
+                act_desc="32 GB + 4 ECC GB x 12",
+                act_param=12,
             ),
         ],
-        selected=0,
+        selected=3,
     ),
 )
 
@@ -45,7 +109,10 @@ tinyml_state = dict(
         enabled=True,
         heading="ML Training",
         docid="tr",
-        options=[e.BlockOption(desc="DenseNet", footprint=0.1)],
+        options=[
+            e.BlockOption(desc="DenseNet", footprint=0.1),
+            e.BlockOption(desc="MobileNetV1", footprint=0.1),
+        ],
         selected=0,
     ),
     casing=dict(
@@ -59,7 +126,7 @@ tinyml_state = dict(
         ],
         selected=0,
     ),
-    connectivity=dict(
+    processor_type=dict(
         enabled=True,
         heading="Processing",
         docid="processing",
@@ -69,6 +136,18 @@ tinyml_state = dict(
             e.BlockOption(desc="SnapDragon ABC", footprint=0.29),
         ],
         selected=0,
+    ),
+    scale=dict(
+        enabled=True,
+        heading="Scale Factor",
+        docid="scale_factor",
+        options=[
+            e.BlockOption(desc="Individual", footprint=0, act_desc="1x"),
+            e.BlockOption(desc="Small Scale", footprint=0, act_desc="10x"),
+            e.BlockOption(desc="Medium Scale", footprint=0, act_desc="100x"),
+            e.BlockOption(desc="Large Scale", footprint=0, act_desc="1,000x"),
+        ],
+        selected=3,
     ),
 )
 

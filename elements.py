@@ -19,7 +19,7 @@ class BlockOption:
     desc: str
     footprint: float
     act_desc: Optional[str] = None
-    act_param: Optional[str] = None
+    act_param: Optional = None
 
 
 
@@ -221,17 +221,19 @@ def radio(state: RadioElement, cb):
     return container
 
 
-def totalCO2(state):
+def totalCO2(state, scale_factor: int = 1):
     sum_co2 = 0
     for k, v in state.items():
         if v["enabled"]:
-            sum_co2 += v["options"][v["selected"]].footprint
+            if k == "scale":
+                continue
+            sum_co2 += (v["options"][v["selected"]].footprint * scale_factor)
     sum_el = document.createElement("div")
-    sum_el.appendChild(document.createTextNode(f"Total: {sum_co2:0.2f} kg CO2e"))
+    sum_el.appendChild(document.createTextNode(f"TinyML Total: {sum_co2:0.2f} kg CO2e"))
     return sum_el
 
 
-def plot(state, act_footprint):
+def plot(state, act_footprint, scale_tinyml: int = 1):
     # footprint = {"system": [], "component": [], co2: []}
     footprint = {}
     footprint.update(act_footprint)
@@ -239,16 +241,19 @@ def plot(state, act_footprint):
     sum_co2 = 0
     for k, v in state["tinyml"].items():
         if v["enabled"]:
+            if k == "scale":
+                continue
             footprint["system"].append("TinyML")
             footprint["component"].append(v["heading"])
             co2e = v["options"][v["selected"]].footprint
+            co2e = co2e * scale_tinyml
             footprint[co2].append(co2e)
             sum_co2 += co2e
     df = pd.DataFrame(footprint)
     fig = px.bar(df, x="system", y=co2, color="component")
     fig.update_layout(autosize=False, width=400, height=700)
     # max_footprint = max(1.5, sum_co2)
-    # fig.update_yaxes(range=[0, max_footprint])
+    # fig.update_yaxes(range=[0, 160])
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     plotly_render(graphJSON, "graph")
 
@@ -279,6 +284,11 @@ def collapse_byid(elemid, _):
         config.style.display = "none"
 
 
+def text_node(text: str):
+    el = document.createElement("div")
+    el.appendChild(document.createTextNode(text))
+    return el
+
 class App:
     def __init__(self, state):
         assert "act" in state
@@ -306,7 +316,7 @@ class App:
 
         tinyml_container = document.createElement("div")
         tinyml_container.className = "calcsection"
-        tinyml_container.appendChild(document.createTextNode("TinyML"))
+        tinyml_container.appendChild(document.createTextNode("TinyML (Pirson & Bol)"))
 
         ci_tiny = collapse_icon("tinyml_collapse")
 
@@ -343,7 +353,14 @@ class App:
         #     self.build(None)
         # app.appendChild(button(mycb))
         # app.appendChild(document.createTextNode(f"{self.state}"))
-        app.appendChild(totalCO2(self.state["tinyml"]))
+
+        graph_container.appendChild(text_node("TinyML vs. Traditional Server"))
+        graph_container.appendChild(text_node("Server Inferences/sec: 300 (placeholder)"))
+        graph_container.appendChild(text_node("TinyML Inferences/sec: 1 (placeholder)"))
+
+        scale_factor_key = self.state["tinyml"]["scale"]["selected"]
+        scale_factor = {0: 1, 1: 10, 2: 100, 3:1000}[scale_factor_key]
+        graph_container.appendChild(totalCO2(self.state["tinyml"], scale_factor))
 
         act_footprint = ACT_model.model(self.state["act"])
         #print(f"{jload=}")
@@ -356,7 +373,7 @@ class App:
         graph_el.setAttribute("id", "graph")
         graph_container.appendChild(graph_el)
 
-        plot(self.state, act_footprint)
+        plot(self.state, act_footprint, scale_tinyml=scale_factor)
 
     def build(self, event):
         # if event is not None:
