@@ -22,7 +22,6 @@ class BlockOption:
     act_param: Optional = None
 
 
-
 def render_block_option(o):
     supporting_el_html = document.createElement("span")
     desc_el = document.createElement("span")
@@ -227,13 +226,29 @@ def totalCO2(state, scale_factor: int = 1):
         if v["enabled"]:
             if k == "scale":
                 continue
-            sum_co2 += (v["options"][v["selected"]].footprint * scale_factor)
+            sum_co2 += v["options"][v["selected"]].footprint * scale_factor
     sum_el = document.createElement("div")
     sum_el.appendChild(document.createTextNode(f"TinyML Total: {sum_co2:0.2f} kg CO2e"))
     return sum_el
 
 
-def plot(state, act_footprint, scale_tinyml: int = 1):
+def plot_inferences(state, elem_id: str, scale_tinyml: int = 1):
+    inference_type = "FPS"
+    inferences = {}
+    inferences["system"] = ["TinyML", "Traditional"]
+    inferences[inference_type] = [10, 20]
+    df = pd.DataFrame(inferences)
+    fig = px.bar(
+        df, y="system", x=inference_type, orientation="h", title="Inferences/sec"
+    )
+    fig.update_layout(autosize=False, width=400, height=300)
+    # max_footprint = max(1.5, sum_co2)
+    # fig.update_yaxes(range=[0, 160])
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    plotly_render(graphJSON, elem_id)
+
+
+def plot_co2(state, act_footprint, elem_id: str, scale_tinyml: int = 1):
     # footprint = {"system": [], "component": [], co2: []}
     footprint = {}
     footprint.update(act_footprint)
@@ -250,12 +265,18 @@ def plot(state, act_footprint, scale_tinyml: int = 1):
             footprint[co2].append(co2e)
             sum_co2 += co2e
     df = pd.DataFrame(footprint)
-    fig = px.bar(df, x="system", y=co2, color="component")
+    fig = px.bar(
+        df,
+        x="system",
+        y=co2,
+        color="component",
+        title="Embodied and Operational CO2 Footprint",
+    )
     fig.update_layout(autosize=False, width=400, height=700)
     # max_footprint = max(1.5, sum_co2)
     # fig.update_yaxes(range=[0, 160])
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    plotly_render(graphJSON, "graph")
+    plotly_render(graphJSON, elem_id)
 
 
 def collapse_icon(elemid: str):
@@ -289,6 +310,7 @@ def text_node(text: str):
     el.appendChild(document.createTextNode(text))
     return el
 
+
 class App:
     def __init__(self, state):
         assert "act" in state
@@ -320,7 +342,9 @@ class App:
 
         ci_tiny = collapse_icon("tinyml_collapse")
 
-        add_event_listener(ci_tiny, "click", partial(collapse_byid, "tinyml_configuration"))
+        add_event_listener(
+            ci_tiny, "click", partial(collapse_byid, "tinyml_configuration")
+        )
         tinyml_container.appendChild(ci_tiny)
         config_container.appendChild(tinyml_container)
 
@@ -354,26 +378,37 @@ class App:
         # app.appendChild(button(mycb))
         # app.appendChild(document.createTextNode(f"{self.state}"))
 
-        graph_container.appendChild(text_node("TinyML vs. Traditional Server"))
-        graph_container.appendChild(text_node("Server Inferences/sec: 300 (placeholder)"))
-        graph_container.appendChild(text_node("TinyML Inferences/sec: 1 (placeholder)"))
+        # graph_container.appendChild(text_node("TinyML vs. Traditional Server"))
+        # graph_container.appendChild(text_node("Server Inferences/sec: 100 (placeholder)"))
+        # graph_container.appendChild(text_node("TinyML Inferences/sec: 1 (placeholder)"))
 
         scale_factor_key = self.state["tinyml"]["scale"]["selected"]
-        scale_factor = {0: 1, 1: 10, 2: 100, 3:1000}[scale_factor_key]
-        graph_container.appendChild(totalCO2(self.state["tinyml"], scale_factor))
+        scale_factor = {0: 1, 1: 10, 2: 100, 3: 1000}[scale_factor_key]
+        # graph_container.appendChild(totalCO2(self.state["tinyml"], scale_factor))
 
         act_footprint = ACT_model.model(self.state["act"])
-        #print(f"{jload=}")
-        #je = document.createTextNode(f"{jload}")
-        #rje = document.createElement("div")
-        #rje.appendChild(je)
-        #graph_container.appendChild(rje)
+        # print(f"{jload=}")
+        # je = document.createTextNode(f"{jload}")
+        # rje = document.createElement("div")
+        # rje.appendChild(je)
+        # graph_container.appendChild(rje)
+
+        inference_el = document.createElement("div")
+        inference_elem_id = "inference_graph"
+        inference_el.setAttribute("id", inference_elem_id)
+        graph_container.appendChild(inference_el)
+        plot_inferences(
+            self.state, elem_id=inference_elem_id, scale_tinyml=scale_factor
+        )
 
         graph_el = document.createElement("div")
-        graph_el.setAttribute("id", "graph")
+        co2_elem_id = "co2_graph"
+        graph_el.setAttribute("id", co2_elem_id)
         graph_container.appendChild(graph_el)
 
-        plot(self.state, act_footprint, scale_tinyml=scale_factor)
+        plot_co2(
+            self.state, act_footprint, elem_id=co2_elem_id, scale_tinyml=scale_factor
+        )
 
     def build(self, event):
         # if event is not None:

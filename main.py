@@ -108,17 +108,17 @@ tinyml_state = dict(
     ml_training=dict(
         enabled=True,
         heading="ML Training",
-        docid="tr",
+        docid="tinyml_training",
         options=[
             e.BlockOption(desc="DenseNet", footprint=0.1),
             e.BlockOption(desc="MobileNetV1", footprint=0.1),
         ],
-        selected=0,
+        selected=1,
     ),
     casing=dict(
         enabled=True,
         heading="Casing",
-        docid="casing",
+        docid="tinyml_casing",
         options=[
             e.BlockOption(desc="small", footprint=0.04),
             e.BlockOption(desc="medium", footprint=0.27),
@@ -129,25 +129,89 @@ tinyml_state = dict(
     processor_type=dict(
         enabled=True,
         heading="Processing",
-        docid="processing",
+        docid="tinyml_processor_type",
         options=[
-            e.BlockOption(desc="ARM Coretex M4", footprint=0.08),
-            e.BlockOption(desc="Broadcom XYZ", footprint=0.17),
-            e.BlockOption(desc="SnapDragon ABC", footprint=0.29),
+            e.BlockOption(desc="HSL-0 low", footprint=0.08),
+            e.BlockOption(desc="HSL-0 typical", footprint=0.17),
+            e.BlockOption(desc="HSL-0 high", footprint=0.29),
+        ],
+        selected=1,
+    ),
+    pcb=dict(
+        enabled=True,
+        heading="PCB",
+        docid="tinyml_pcb",
+        options=[
+            e.BlockOption(desc="HSL-0 small", footprint=0.13),
+            e.BlockOption(desc="HSL-0 typical", footprint=0.16),
+            e.BlockOption(desc="HSL-0 large", footprint=0.24),
+        ],
+        selected=1,
+    ),
+    power_supply=dict(
+        enabled=True,
+        heading="Power Supply",
+        docid="tinyml_power_supply",
+        options=[
+            e.BlockOption(desc="Mains powered", footprint=0.52),
+            e.BlockOption(desc="Li-ion battery (typical)", footprint=1.36),
+            e.BlockOption(desc="Li-ion battery (large)", footprint=2.71),
+        ],
+        selected=0,
+    ),
+    sensing=dict(
+        enabled=True,
+        heading="Sensing",
+        docid="tinyml_sensing",
+        options=[
+            e.BlockOption(desc="Microphone", footprint=0.03),
+            e.BlockOption(desc="Vision (Low FPS)", footprint=0.77),
+            e.BlockOption(desc="Vision (High FPS)", footprint=1.47),
+        ],
+        selected=1,
+    ),
+    transport=dict(
+        enabled=True,
+        heading="Transport",
+        docid="tinyml_transport",
+        options=[
+            e.BlockOption(desc="HSL-1 Best case", footprint=0.18),
+            e.BlockOption(desc="HSL-1 Typical", footprint=0.4),
+            e.BlockOption(desc="HSL-1 Worst case", footprint=1.35),
+        ],
+        selected=1,
+    ),
+    ui=dict(
+        enabled=True,
+        heading="Indicator LED UI",
+        docid="tinyml_ui",
+        options=[
+            e.BlockOption(desc="HSL-1 Best case", footprint=0.03),
+            e.BlockOption(desc="HSL-1 Typical", footprint=0.06),
+            e.BlockOption(desc="HSL-1 Worst case", footprint=0.12),
+        ],
+        selected=1,
+    ),
+    use_stage=dict(
+        enabled=True,
+        heading="Use-Stage",
+        docid="tinyml_use_stage",
+        options=[
+            e.BlockOption(desc="Continuous 1mW", footprint=0.01),
         ],
         selected=0,
     ),
     scale=dict(
         enabled=True,
         heading="Scale Factor",
-        docid="scale_factor",
+        docid="tinyml_scale_factor",
         options=[
             e.BlockOption(desc="Individual", footprint=0, act_desc="1x"),
             e.BlockOption(desc="Small Scale", footprint=0, act_desc="10x"),
             e.BlockOption(desc="Medium Scale", footprint=0, act_desc="100x"),
             e.BlockOption(desc="Large Scale", footprint=0, act_desc="1,000x"),
         ],
-        selected=3,
+        selected=2,
     ),
 )
 
