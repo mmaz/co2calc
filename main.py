@@ -165,8 +165,19 @@ tinyml_state = dict(
         docid="tinyml_sensing",
         options=[
             e.BlockOption(desc="Microphone", footprint=0.03),
-            e.BlockOption(desc="Vision (Low FPS)", footprint=0.77),
-            e.BlockOption(desc="Vision (High FPS)", footprint=1.47),
+            e.BlockOption(desc="Vision (Typical)", footprint=0.77),
+            e.BlockOption(desc="Vision (Worst case)", footprint=1.47),
+        ],
+        selected=1,
+    ),
+    others=dict(
+        enabled=True,
+        heading="Others",
+        docid="tinyml_others",
+        options=[
+            e.BlockOption(desc="HSL-0 Best case", footprint=0.06),
+            e.BlockOption(desc="HSL-0 Typical", footprint=0.11),
+            e.BlockOption(desc="HSL-0 Worst case", footprint=0.14),
         ],
         selected=1,
     ),
