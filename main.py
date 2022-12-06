@@ -1,5 +1,23 @@
 import elements as e
 
+preset_state = dict(
+    enabled=True,
+    heading="Application Presets",
+    docid="preset_id",
+    options=[
+        e.BlockOption(
+            desc="Vision",
+            footprint=0,
+            act_desc="Classifier/Features",
+            act_param="",
+        ),
+        e.BlockOption(
+            desc="Anomaly Detection", footprint=0, act_desc="Autoencoder", act_param=""
+        ),
+    ],
+    selected=0,
+)
+
 act_state = dict(
     cpu_node=dict(
         enabled=True,
@@ -228,7 +246,7 @@ tinyml_state = dict(
 
 
 def main():
-    app = e.App(dict(act=act_state, tinyml=tinyml_state))
+    app = e.App(dict(presets=preset_state, act=act_state, tinyml=tinyml_state))
     app.build(None)
 
 

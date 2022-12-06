@@ -147,6 +147,22 @@ def render_block(state, cb):
     return block_el
 
 
+def render_presets(state, callbacks):
+    assert len(callbacks) == len(state["options"])
+    block_el = document.createElement("div")
+    block_el.className = "block-el"
+    block_el.setAttribute("style", "margin-left: 10px; margin-right: 10px;")
+    block_title = document.createElement("div")
+    block_title.className = "block-title"
+    block_title.appendChild(document.createTextNode(state["heading"]))
+    block_el.appendChild(block_title)
+
+    row_els = []
+    for ix, _ in enumerate(state["options"]):
+        row_els.append((block_option(ix, state, callbacks[ix]), 3))
+    block_el.appendChild(make_cols(row_els))
+    return block_el
+
 
 def totalCO2(state, scale_factor: int = 1):
     sum_co2 = 0
@@ -161,7 +177,10 @@ def totalCO2(state, scale_factor: int = 1):
 
 
 def plot_inferences(state, elem_id: str, scale_tinyml: int = 1):
-    inference_type = "FPS"
+    if state["presets"]["selected"] == 0:
+        inference_type = "FPS (Vision)"
+    else:
+        inference_type = "FPS (Audio)"
     inferences = {}
     inferences["system"] = ["TinyML", "Traditional"]
     inferences[inference_type] = [10, 20]
@@ -245,6 +264,12 @@ class App:
         assert "tinyml" in state
         self.state = state
 
+    def preset_vision(self, _):
+        self.build(None)
+
+    def preset_anomaly(self, _):
+        self.build(None)
+
     def render(self):
         app = document.getElementById("app")
         app.innerHTML = ""
@@ -263,6 +288,17 @@ class App:
         config_container = document.createElement("div")
         config_container.className = "col-lg-7"
         main_row.appendChild(config_container)
+
+        # this doesnt need an inner container for collapsing
+        preset_container = document.createElement("div")
+        preset_container.className = "calcsection"
+        # preset_container.appendChild(document.createTextNode("Presets"))
+        preset_container.appendChild(
+            render_presets(
+                self.state["presets"], [self.preset_vision, self.preset_anomaly]
+            )
+        )
+        config_container.appendChild(preset_container)
 
         tinyml_container = document.createElement("div")
         tinyml_container.className = "calcsection"
