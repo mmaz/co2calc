@@ -195,6 +195,15 @@ def plot_inferences(state, elem_id: str, scale_tinyml: int = 1):
     plotly_render(graphJSON, elem_id)
 
 
+def add_reference_points(footprint: dict, co2: str):
+    footprint["system"].append("MacBook Pro (x1)")
+    footprint["component"].append("reference")
+    footprint[co2].append(349)
+    footprint["system"].append("Apple Watch S7 (x1)")
+    footprint["component"].append("reference")
+    footprint[co2].append(34)
+
+
 def plot_co2(state, act_footprint, elem_id: str, scale_tinyml: int = 1):
     # footprint = {"system": [], "component": [], co2: []}
     footprint = {}
@@ -211,6 +220,7 @@ def plot_co2(state, act_footprint, elem_id: str, scale_tinyml: int = 1):
             co2e = co2e * scale_tinyml
             footprint[co2].append(co2e)
             sum_co2 += co2e
+    add_reference_points(footprint, co2)
     df = pd.DataFrame(footprint)
     fig = px.bar(
         df,
@@ -258,6 +268,19 @@ def text_node(text: str):
     return el
 
 
+def _common_presets(tinyml):
+    tinyml["casing"]["selected"] = 0
+    tinyml["processor_type"]["selected"] = 1
+    tinyml["pcb"]["selected"] = 1
+    tinyml["power_supply"]["selected"] = 0
+    tinyml["others"]["selected"] = 1
+    tinyml["transport"]["selected"] = 1
+    tinyml["ui"]["selected"] = 1
+    tinyml["use_stage"]["selected"] = 0
+    tinyml["scale"]["selected"] = 2
+    return
+
+
 class App:
     def __init__(self, state):
         assert "act" in state
@@ -265,9 +288,17 @@ class App:
         self.state = state
 
     def preset_vision(self, _):
+        tinyml = self.state["tinyml"]
+        tinyml["ml_training"]["selected"] = 1
+        tinyml["sensing"]["selected"] = 1
+        _common_presets(tinyml)
         self.build(None)
 
     def preset_anomaly(self, _):
+        tinyml = self.state["tinyml"]
+        tinyml["ml_training"]["selected"] = 0
+        tinyml["sensing"]["selected"] = 0
+        _common_presets(tinyml)
         self.build(None)
 
     def render(self):
@@ -346,8 +377,8 @@ class App:
         # graph_container.appendChild(text_node("Server Inferences/sec: 100 (placeholder)"))
         # graph_container.appendChild(text_node("TinyML Inferences/sec: 1 (placeholder)"))
 
-        scale_factor_key = self.state["tinyml"]["scale"]["selected"]
-        scale_factor = {0: 1, 1: 10, 2: 100, 3: 1000}[scale_factor_key]
+        tinyml_scale_factor_key = self.state["tinyml"]["scale"]["selected"]
+        scale_tinyml = {0: 1, 1: 10, 2: 100, 3: 1000}[tinyml_scale_factor_key]
         # graph_container.appendChild(totalCO2(self.state["tinyml"], scale_factor))
 
         act_footprint = ACT_model.model(self.state["act"])
@@ -362,7 +393,7 @@ class App:
         inference_el.setAttribute("id", inference_elem_id)
         graph_container.appendChild(inference_el)
         plot_inferences(
-            self.state, elem_id=inference_elem_id, scale_tinyml=scale_factor
+            self.state, elem_id=inference_elem_id, scale_tinyml=scale_tinyml
         )
 
         graph_el = document.createElement("div")
@@ -371,7 +402,7 @@ class App:
         graph_container.appendChild(graph_el)
 
         plot_co2(
-            self.state, act_footprint, elem_id=co2_elem_id, scale_tinyml=scale_factor
+            self.state, act_footprint, elem_id=co2_elem_id, scale_tinyml=scale_tinyml
         )
 
     def build(self, event):

@@ -247,7 +247,7 @@ tinyml_state = dict(
 
 def main():
     app = e.App(dict(presets=preset_state, act=act_state, tinyml=tinyml_state))
-    app.build(None)
+    app.preset_vision(None)
 
 
 main()
