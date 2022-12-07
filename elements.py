@@ -298,14 +298,11 @@ def collapse_icon(elemid: str):
     # componentHandler.upgradeElement(tooltip)
     return icon_container
 
-
-def collapse_byid(elemid, _):
-    config = document.getElementById(elemid)
-    if config.style.display == "none":
-        config.style.display = "block"
-    else:
-        config.style.display = "none"
-
+def collapse_note():
+    note = document.createElement("span")
+    note.className = "mdl-color-text--grey-600"
+    note.appendChild(document.createTextNode("Note: click the gear icons to hide or expand configuration sections for TinyML and ACT"))
+    return note
 
 def text_node(text: str):
     el = document.createElement("div")
@@ -337,14 +334,18 @@ class App:
         tinyml["ml_training"]["selected"] = 1
         tinyml["sensing"]["selected"] = 1
         _common_presets(tinyml)
-        self.build(None)
+        return self.build(None)
 
     def preset_anomaly(self, _):
         tinyml = self.state["tinyml"]
         tinyml["ml_training"]["selected"] = 0
         tinyml["sensing"]["selected"] = 0
         _common_presets(tinyml)
-        self.build(None)
+        return self.build(None)
+    
+    def collapse(self, state, key, _):
+        state[key] = not state[key]
+        return self.build(None)
 
     def render(self):
         app = document.getElementById("app")
@@ -383,13 +384,17 @@ class App:
         ci_tiny = collapse_icon("tinyml_collapse")
 
         add_event_listener(
-            ci_tiny, "click", partial(collapse_byid, "tinyml_configuration")
+            ci_tiny, "click", partial(self.collapse, self.state["expanded"], "tinyml")
         )
         tinyml_container.appendChild(ci_tiny)
         config_container.appendChild(tinyml_container)
 
         tinyml_inner_container = document.createElement("div")
         tinyml_inner_container.setAttribute("id", "tinyml_configuration")
+        if self.state["expanded"]["tinyml"]:
+            tinyml_inner_container.style.display = "block"
+        else:
+            tinyml_inner_container.style.display = "none"
         tinyml_container.appendChild(tinyml_inner_container)
 
         act_container = document.createElement("div")
@@ -397,12 +402,18 @@ class App:
         act_container.appendChild(document.createTextNode("Traditional Server (ACT)"))
 
         ci_act = collapse_icon("act_collapse")
-        add_event_listener(ci_act, "click", partial(collapse_byid, "act_configuration"))
+        add_event_listener(
+            ci_act, "click", partial(self.collapse, self.state["expanded"], "act")
+        )
         act_container.appendChild(ci_act)
         config_container.appendChild(act_container)
 
         act_inner_container = document.createElement("div")
         act_inner_container.setAttribute("id", "act_configuration")
+        if self.state["expanded"]["act"]:
+            act_inner_container.style.display = "block"
+        else:
+            act_inner_container.style.display = "none"
         act_container.appendChild(act_inner_container)
 
         for k, v in self.state["tinyml"].items():
@@ -417,6 +428,7 @@ class App:
         for k, v in self.state["emerging"].items():
             emerging_container.appendChild(render_block(v, self.build))
         config_container.appendChild(emerging_container)
+        config_container.appendChild(collapse_note())
 
         # def mycb():
         #     print(self.state)

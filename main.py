@@ -261,7 +261,15 @@ tinyml_state = dict(
 
 
 def main():
-    app = e.App(dict(presets=preset_state, act=act_state, tinyml=tinyml_state, emerging=emerging_tech))
+    app = e.App(
+        dict(
+            presets=preset_state,
+            act=act_state,
+            tinyml=tinyml_state,
+            emerging=emerging_tech,
+            expanded=dict(tinyml=True, act=True),
+        )
+    )
     app.preset_vision(None)
 
 
