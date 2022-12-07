@@ -310,7 +310,7 @@ def text_node(text: str):
     return el
 
 
-def _common_presets(tinyml):
+def _common_presets(tinyml, act):
     tinyml["casing"]["selected"] = 0
     tinyml["processor_type"]["selected"] = 1
     tinyml["pcb"]["selected"] = 1
@@ -320,6 +320,12 @@ def _common_presets(tinyml):
     tinyml["ui"]["selected"] = 1
     tinyml["use_stage"]["selected"] = 0
     tinyml["scale"]["selected"] = 2
+
+    act["cpu_node"]["selected"] = 0
+    act["energy_source"]["selected"] = 0
+    act["dram"]["selected"] = 3
+    act["ssd_main"]["selected"] = 2
+    act["ssd_secondary"]["selected"] = 0
     return
 
 
@@ -333,14 +339,18 @@ class App:
         tinyml = self.state["tinyml"]
         tinyml["ml_training"]["selected"] = 1
         tinyml["sensing"]["selected"] = 1
-        _common_presets(tinyml)
+        act = self.state["act"]
+        act["cpu_count"]["selected"] = 1
+        _common_presets(tinyml, act)
         return self.build(None)
 
     def preset_anomaly(self, _):
         tinyml = self.state["tinyml"]
         tinyml["ml_training"]["selected"] = 0
         tinyml["sensing"]["selected"] = 0
-        _common_presets(tinyml)
+        act = self.state["act"]
+        act["cpu_count"]["selected"] = 0
+        _common_presets(tinyml, act)
         return self.build(None)
     
     def collapse(self, state, key, _):
@@ -399,7 +409,7 @@ class App:
 
         act_container = document.createElement("div")
         act_container.className = "calcsection"
-        act_container.appendChild(document.createTextNode("Traditional Server (ACT)"))
+        act_container.appendChild(document.createTextNode("Traditional Server (ACT Dell R740 Server)"))
 
         ci_act = collapse_icon("act_collapse")
         add_event_listener(

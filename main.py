@@ -120,6 +120,58 @@ act_state = dict(
         ],
         selected=3,
     ),
+    ssd_main=dict(
+        enabled=True,
+        heading="SSD Main",
+        docid="ssd_main_footprint",
+        options=[
+            e.BlockOption(
+                desc="3.84 TB",
+                footprint=0,
+                act_desc="3.84 TB SSD x 1",
+                act_param=1,
+            ),
+            e.BlockOption(
+                desc="15.36 TB",
+                footprint=0,
+                act_desc="3.84 TB SSD x 4",
+                act_param=4,
+            ),
+            e.BlockOption(
+                desc="30.72 TB",
+                footprint=0,
+                act_desc="3.84 TB SSD x 8",
+                act_param=8,
+            ),
+            e.BlockOption(
+                desc="46.08 TB",
+                footprint=0,
+                act_desc="3.84 TB SSD x 12",
+                act_param=12,
+            ),
+        ],
+        selected=2,
+    ),
+    ssd_secondary=dict(
+        enabled=True,
+        heading="SSD Secondary",
+        docid="ssd_secondary_footprint",
+        options=[
+            e.BlockOption(
+                desc="400 GB",
+                footprint=0,
+                act_desc="400 GB x 1",
+                act_param=1,
+            ),
+            e.BlockOption(
+                desc="800 GB",
+                footprint=0,
+                act_desc="400 GB x 2",
+                act_param=2,
+            ),
+        ],
+        selected=0,
+    ),
 )
 
 emerging_tech = dict(
@@ -257,6 +309,7 @@ tinyml_state = dict(
         ],
         selected=2,
     ),
+
 )
 
 
