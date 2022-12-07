@@ -196,7 +196,7 @@ tinyml_state = dict(
         docid="tinyml_training",
         options=[
             e.BlockOption(desc="DenseNet", footprint=0.1),
-            e.BlockOption(desc="MobileNetV1", footprint=0.1),
+            e.BlockOption(desc="MobileNetV1", footprint=1.0),
         ],
         selected=1,
     ),

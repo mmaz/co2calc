@@ -341,6 +341,8 @@ def make_note(key = None, custom: str = None):
         note = "Note: Server FPS assumes (224, 224, 3) input image dimensions, all others assume (96, 96, 1)"
     elif key == "inputdim-ad":
         note = "Anomaly detection FPS assumes an input-dim of (640,) and omits preprocessing"
+    elif key == "mobilenet":
+        note = "Note: MobileNetV1 CO₂ footprint uses ViT-Tiny CO₂ as a proxy value (Dodge et. al., FAccT '22)"
     note_el = document.createElement("span")
     note_el.className = "mdl-color-text--grey-600"
     note_el.setAttribute("style", "font-size: 0.6em;")
@@ -485,6 +487,8 @@ class App:
             emerging_container.appendChild(render_block(v, self.build))
         config_container.appendChild(emerging_container)
         config_container.appendChild(make_note("collapse"))
+        config_container.appendChild(document.createElement("br"))
+        config_container.appendChild(make_note("mobilenet"))
 
         # def mycb():
         #     print(self.state)
