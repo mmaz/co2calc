@@ -122,6 +122,21 @@ act_state = dict(
     ),
 )
 
+emerging_tech = dict(
+    flexic=dict(
+        enabled=True,
+        heading="Flexible Circuits",
+        docid="flexics",
+        options=[
+            e.BlockOption(desc="Individual", footprint=0, act_desc="1x"),
+            e.BlockOption(desc="Small Scale", footprint=0, act_desc="10x"),
+            e.BlockOption(desc="Medium Scale", footprint=0, act_desc="100x"),
+            e.BlockOption(desc="Large Scale", footprint=0, act_desc="1,000x"),
+        ],
+        selected=2,
+    ),
+)
+
 tinyml_state = dict(
     ml_training=dict(
         enabled=True,
@@ -246,7 +261,7 @@ tinyml_state = dict(
 
 
 def main():
-    app = e.App(dict(presets=preset_state, act=act_state, tinyml=tinyml_state))
+    app = e.App(dict(presets=preset_state, act=act_state, tinyml=tinyml_state, emerging=emerging_tech))
     app.preset_vision(None)
 
 

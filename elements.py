@@ -176,14 +176,38 @@ def totalCO2(state, scale_factor: int = 1):
     return sum_el
 
 
+def inference_emerging(
+    state: dict, inferences: dict, inference_key: str, emerging_fps: dict
+):
+    if state["emerging"]["flexic"]["enabled"]:
+        inferences["system"].append("FlexICs")
+        flexic_scale_factor_key = state["emerging"]["flexic"]["selected"]
+        scale_flexic = {0: 1, 1: 10, 2: 100, 3: 1000}[flexic_scale_factor_key]
+        one_device_fps = emerging_fps["flexic"]
+        fps_flexic = one_device_fps * scale_flexic
+        inferences[inference_key].append(fps_flexic)
+
+
 def plot_inferences(state, elem_id: str, scale_tinyml: int = 1):
     if state["presets"]["selected"] == 0:
         inference_type = "FPS (Vision)"
+        # TODO(mmaz)
+        emerging_1device_fps = dict(flexic=0.0001, cnt=0.01)
+        act_1cpu_fps = 1000
+        tinyml_1cpu_fps = 0.9
     else:
         inference_type = "FPS (Audio)"
+        # TODO(mmaz)
+        emerging_1device_fps = dict(flexic=0.001, cnt=0.1)
+        act_1cpu_fps = 10_000
+        # 10ms, source: https://docs.edgeimpulse.com/experts/machine-learning-prototype-projects/brushless-dc-motor-anomaly-detection
+        tinyml_1cpu_fps = 100
+    # inferences = {"system": [], "inference_type": []}
     inferences = {}
     inferences["system"] = ["TinyML", "Traditional"]
+    # TODO(mmaz)
     inferences[inference_type] = [10, 20]
+    inference_emerging(state, inferences, inference_type, emerging_1device_fps)
     df = pd.DataFrame(inferences)
     fig = px.bar(
         df, y="system", x=inference_type, orientation="h", title="Inferences/sec"
@@ -195,13 +219,30 @@ def plot_inferences(state, elem_id: str, scale_tinyml: int = 1):
     plotly_render(graphJSON, elem_id)
 
 
-def add_reference_points(footprint: dict, co2: str):
+def add_emerging_and_refs(state: dict, footprint: dict, co2key: str, tinyml_unscaled: dict):
+    flexic_carbon_reduction_factor = 1000
+    if state["emerging"]["flexic"]["enabled"]:
+        flexic_scale_factor_key = state["emerging"]["flexic"]["selected"]
+        scale_flexic = {0: 1, 1: 10, 2: 100, 3: 1000}[flexic_scale_factor_key]
+        for tinyml_k, (heading, tinyml_co2e) in tinyml_unscaled.items():
+            footprint["system"].append("FlexICs")
+            footprint["component"].append(heading)
+            if tinyml_k == "ml_training":
+                # ml training is done once, and not scaled down
+                co2e = tinyml_co2e
+            elif tinyml_k in ["processor_type", "pcb"]:
+                # these are the only embodied cabon reductions for flexics
+                co2e = tinyml_co2e / flexic_carbon_reduction_factor * scale_flexic
+            else:
+                co2e = tinyml_co2e * scale_flexic
+            footprint[co2key].append(co2e)
+    # static reference points
     footprint["system"].append("MacBook Pro (x1)")
     footprint["component"].append("reference")
-    footprint[co2].append(349)
+    footprint[co2key].append(349)
     footprint["system"].append("Apple Watch S7 (x1)")
     footprint["component"].append("reference")
-    footprint[co2].append(34)
+    footprint[co2key].append(34)
 
 
 def plot_co2(state, act_footprint, elem_id: str, scale_tinyml: int = 1):
@@ -210,6 +251,7 @@ def plot_co2(state, act_footprint, elem_id: str, scale_tinyml: int = 1):
     footprint.update(act_footprint)
     co2 = "kg CO2"
     sum_co2 = 0
+    tinyml_unscaled = {}
     for k, v in state["tinyml"].items():
         if v["enabled"]:
             if k == "scale":
@@ -217,10 +259,13 @@ def plot_co2(state, act_footprint, elem_id: str, scale_tinyml: int = 1):
             footprint["system"].append("TinyML")
             footprint["component"].append(v["heading"])
             co2e = v["options"][v["selected"]].footprint
-            co2e = co2e * scale_tinyml
+            tinyml_unscaled[k] = (v["heading"], co2e)
+            if k != "ml_training":
+                # ml_training is done once, not for each device
+                co2e = co2e * scale_tinyml
             footprint[co2].append(co2e)
             sum_co2 += co2e
-    add_reference_points(footprint, co2)
+    add_emerging_and_refs(state, footprint, co2key=co2, tinyml_unscaled=tinyml_unscaled)
     df = pd.DataFrame(footprint)
     fig = px.bar(
         df,
@@ -365,6 +410,13 @@ class App:
 
         for k, v in self.state["act"].items():
             act_inner_container.appendChild(render_block(v, self.build))
+
+        emerging_container = document.createElement("div")
+        emerging_container.className = "calcsection"
+        emerging_container.appendChild(document.createTextNode("Emerging Technologies"))
+        for k, v in self.state["emerging"].items():
+            emerging_container.appendChild(render_block(v, self.build))
+        config_container.appendChild(emerging_container)
 
         # def mycb():
         #     print(self.state)
