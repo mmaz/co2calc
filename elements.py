@@ -208,16 +208,16 @@ def plot_inferences(state, elem_id: str, scale_tinyml: int = 1, scale_act: int =
     # https://mlcommons.org/en/inference-tiny-05/ reports latency for 120MHz reference processor
     # tinyml_fps = 1 / (latency_ms * 1e-3)
     if state["presets"]["selected"] == 0:
-        inference_type = "FPS (Vision)"
+        inference_type = "FPS (Images)"
         flex_key = "vision"
-        # TODO(mmaz)
-        act_1cpu_fps = 1000
+        mode = "Vision"
+        act_1cpu_fps = 14.2
         tinyml_1cpu_fps = 1 / 704.23e-3
     else:
         inference_type = "FPS (Audio)"
         flex_key = "audio"
-        # TODO(mmaz)
-        act_1cpu_fps = 10_000
+        mode = "Anomaly Detection"
+        act_1cpu_fps = 24_381.65
         tinyml_1cpu_fps = 1 / 10.40e-3
     # inferences = {"system": [], "inference_type": []}
     inferences = {}
@@ -234,7 +234,7 @@ def plot_inferences(state, elem_id: str, scale_tinyml: int = 1, scale_act: int =
         y="system",
         x=inference_type,
         orientation="h",
-        title="Inferences/sec",
+        title=f"Inferences/sec ({mode})",
         text_auto="0.2e",
     )
     tinyml_act_ratio = inferences[inference_type][0] / inferences[inference_type][1] 
@@ -242,7 +242,7 @@ def plot_inferences(state, elem_id: str, scale_tinyml: int = 1, scale_act: int =
     fig.update_traces(
         textposition=[tinyml_pos, "inside", "outside", "outside"], cliponaxis=False
     )
-    fig.update_layout(autosize=False, width=400, height=300, margin=dict(l=0, r=0))
+    fig.update_layout(autosize=False, width=400, height=300, margin=dict(l=0, r=0, b=0))
     # max_footprint = max(1.5, sum_co2)
     # fig.update_yaxes(range=[0, 160])
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -331,15 +331,21 @@ def collapse_icon(elemid: str):
     return icon_container
 
 
-def collapse_note():
-    note = document.createElement("span")
-    note.className = "mdl-color-text--grey-600"
-    note.appendChild(
-        document.createTextNode(
-            "Note: click the gear icons to hide or expand configuration sections for TinyML and ACT"
-        )
-    )
-    return note
+def make_note(key = None, custom: str = None):
+    if not key:
+        assert custom, "no note provided"
+        note = custom
+    elif key == "collapse":
+        note =  "Note: click the gear icons to hide or expand configuration sections for TinyML and ACT"
+    elif key == "inputdim-vis":
+        note = "Note: Server FPS assumes (224, 224, 3) input image dimensions, all others assume (96, 96, 1)"
+    elif key == "inputdim-ad":
+        note = "Anomaly detection FPS assumes an input-dim of (640,) and omits preprocessing"
+    note_el = document.createElement("span")
+    note_el.className = "mdl-color-text--grey-600"
+    note_el.setAttribute("style", "font-size: 0.6em;")
+    note_el.appendChild(document.createTextNode(note))
+    return note_el
 
 
 def text_node(text: str):
@@ -478,7 +484,7 @@ class App:
         for k, v in self.state["emerging"].items():
             emerging_container.appendChild(render_block(v, self.build))
         config_container.appendChild(emerging_container)
-        config_container.appendChild(collapse_note())
+        config_container.appendChild(make_note("collapse"))
 
         # def mycb():
         #     print(self.state)
@@ -513,6 +519,13 @@ class App:
             scale_tinyml=scale_tinyml,
             scale_act=scale_act,
         )
+        if self.state["presets"]["selected"] == 0:
+            # add note on vision input sizes
+            graph_container.appendChild(make_note("inputdim-vis"))
+        else:
+            graph_container.appendChild(make_note("inputdim-ad"))
+            
+
 
         graph_el = document.createElement("div")
         co2_elem_id = "co2_graph"

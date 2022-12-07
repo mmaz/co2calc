@@ -205,9 +205,9 @@ tinyml_state = dict(
         heading="Casing",
         docid="tinyml_casing",
         options=[
-            e.BlockOption(desc="small", footprint=0.04),
-            e.BlockOption(desc="medium", footprint=0.27),
-            e.BlockOption(desc="large", footprint=0.63),
+            e.BlockOption(desc="ABS 200g/Steel 20g", footprint=0.04),
+            e.BlockOption(desc="ABS 400g/Steel 80g", footprint=0.27),
+            e.BlockOption(desc="ABS 700g/Steel 300g", footprint=0.63),
         ],
         selected=0,
     ),
@@ -216,9 +216,9 @@ tinyml_state = dict(
         heading="Processing",
         docid="tinyml_processor_type",
         options=[
-            e.BlockOption(desc="HSL-0 low", footprint=0.08),
-            e.BlockOption(desc="HSL-0 typical", footprint=0.17),
-            e.BlockOption(desc="HSL-0 high", footprint=0.29),
+            e.BlockOption(desc="MCU 5 mm²", footprint=0.08),
+            e.BlockOption(desc="MCU 10 mm²", footprint=0.17),
+            e.BlockOption(desc="MCU 17 mm²", footprint=0.29),
         ],
         selected=1,
     ),
@@ -249,9 +249,9 @@ tinyml_state = dict(
         heading="Sensing",
         docid="tinyml_sensing",
         options=[
-            e.BlockOption(desc="Microphone", footprint=0.03),
-            e.BlockOption(desc="Vision (Typical)", footprint=0.77),
-            e.BlockOption(desc="Vision (Worst case)", footprint=1.47),
+            e.BlockOption(desc="Electret Microphone", footprint=0.04),
+            e.BlockOption(desc="30 mm² CMOS", footprint=0.77),
+            e.BlockOption(desc="58 mm² CMOS", footprint=1.47),
         ],
         selected=1,
     ),
@@ -282,9 +282,9 @@ tinyml_state = dict(
         heading="Indicator LED UI",
         docid="tinyml_ui",
         options=[
-            e.BlockOption(desc="HSL-1 Best case", footprint=0.03),
-            e.BlockOption(desc="HSL-1 Typical", footprint=0.06),
-            e.BlockOption(desc="HSL-1 Worst case", footprint=0.12),
+            e.BlockOption(desc="1 LED", footprint=0.03),
+            e.BlockOption(desc="2 LEDs", footprint=0.06),
+            e.BlockOption(desc="4 LEDs", footprint=0.12),
         ],
         selected=1,
     ),
@@ -309,7 +309,6 @@ tinyml_state = dict(
         ],
         selected=2,
     ),
-
 )
 
 
