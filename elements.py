@@ -177,49 +177,81 @@ def totalCO2(state, scale_factor: int = 1):
 
 
 def inference_emerging(
-    state: dict, inferences: dict, inference_key: str, emerging_fps: dict
+    state: dict, inferences: dict, inference_key: str, flex_key: str
 ):
+    # fps calculations
+    anomaly_detection_bitserial_fps = 1 / 49650
+    classification_bitserial_fps = 1 / 914475
+    bitserial = dict(
+        vision=classification_bitserial_fps, audio=anomaly_detection_bitserial_fps
+    )
+    # https://mlcommons.org/en/inference-tiny-05/ reports latency for 120MHz reference processor
+    # tinyml_fps = 1 / (latency_ms * 1e-3)
+    # bitparallel_fps = tinyml_fps * slowdown_factor_from_120MHz_to_50KHz
+    anomaly_detection_bitparallel_fps = (1 / 10.40e-3) * (50e3 / 120e6)
+    classification_bitparallel_fps = (1 / 704.23e-3) * (50e3 / 120e6)
+    bitparallel = dict(
+        vision=classification_bitparallel_fps, audio=anomaly_detection_bitparallel_fps
+    )
+
+    # scaling
+    flexic_scale_factor_key = state["emerging"]["flexic"]["selected"]
+    scale_flexic = {0: 1, 1: 10, 2: 100, 3: 1000}[flexic_scale_factor_key]
     if state["emerging"]["flexic"]["enabled"]:
-        inferences["system"].append("FlexICs")
-        flexic_scale_factor_key = state["emerging"]["flexic"]["selected"]
-        scale_flexic = {0: 1, 1: 10, 2: 100, 3: 1000}[flexic_scale_factor_key]
-        one_device_fps = emerging_fps["flexic"]
-        fps_flexic = one_device_fps * scale_flexic
-        inferences[inference_key].append(fps_flexic)
+        inferences["system"].append("FlexIC (bit-serial)")
+        inferences[inference_key].append(bitserial[flex_key] * scale_flexic)
+        inferences["system"].append("FlexIC (bit-parallel)")
+        inferences[inference_key].append(bitparallel[flex_key] * scale_flexic)
 
 
-def plot_inferences(state, elem_id: str, scale_tinyml: int = 1):
+def plot_inferences(state, elem_id: str, scale_tinyml: int = 1, scale_act: int = 1):
+    # https://mlcommons.org/en/inference-tiny-05/ reports latency for 120MHz reference processor
+    # tinyml_fps = 1 / (latency_ms * 1e-3)
     if state["presets"]["selected"] == 0:
         inference_type = "FPS (Vision)"
+        flex_key = "vision"
         # TODO(mmaz)
-        emerging_1device_fps = dict(flexic=0.0001, cnt=0.01)
         act_1cpu_fps = 1000
-        tinyml_1cpu_fps = 0.9
+        tinyml_1cpu_fps = 1 / 704.23e-3
     else:
         inference_type = "FPS (Audio)"
+        flex_key = "audio"
         # TODO(mmaz)
-        emerging_1device_fps = dict(flexic=0.001, cnt=0.1)
         act_1cpu_fps = 10_000
-        # 10ms, source: https://docs.edgeimpulse.com/experts/machine-learning-prototype-projects/brushless-dc-motor-anomaly-detection
-        tinyml_1cpu_fps = 100
+        tinyml_1cpu_fps = 1 / 10.40e-3
     # inferences = {"system": [], "inference_type": []}
     inferences = {}
     inferences["system"] = ["TinyML", "Traditional"]
     # TODO(mmaz)
-    inferences[inference_type] = [10, 20]
-    inference_emerging(state, inferences, inference_type, emerging_1device_fps)
+    inferences[inference_type] = [
+        tinyml_1cpu_fps * scale_tinyml,
+        act_1cpu_fps * scale_act,
+    ]
+    inference_emerging(state, inferences, inference_type, flex_key)
     df = pd.DataFrame(inferences)
     fig = px.bar(
-        df, y="system", x=inference_type, orientation="h", title="Inferences/sec"
+        df,
+        y="system",
+        x=inference_type,
+        orientation="h",
+        title="Inferences/sec",
+        text_auto="0.2e",
     )
-    fig.update_layout(autosize=False, width=400, height=300)
+    tinyml_act_ratio = inferences[inference_type][0] / inferences[inference_type][1] 
+    tinyml_pos = "outside" if tinyml_act_ratio < 0.5 else "inside"
+    fig.update_traces(
+        textposition=[tinyml_pos, "inside", "outside", "outside"], cliponaxis=False
+    )
+    fig.update_layout(autosize=False, width=400, height=300, margin=dict(l=0, r=0))
     # max_footprint = max(1.5, sum_co2)
     # fig.update_yaxes(range=[0, 160])
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     plotly_render(graphJSON, elem_id)
 
 
-def add_emerging_and_refs(state: dict, footprint: dict, co2key: str, tinyml_unscaled: dict):
+def add_emerging_and_refs(
+    state: dict, footprint: dict, co2key: str, tinyml_unscaled: dict
+):
     flexic_carbon_reduction_factor = 1000
     if state["emerging"]["flexic"]["enabled"]:
         flexic_scale_factor_key = state["emerging"]["flexic"]["selected"]
@@ -274,7 +306,7 @@ def plot_co2(state, act_footprint, elem_id: str, scale_tinyml: int = 1):
         color="component",
         title="Embodied and Operational CO2 Footprint",
     )
-    fig.update_layout(autosize=False, width=400, height=700)
+    fig.update_layout(autosize=False, width=400, height=700, margin=dict(l=0, r=0))
     # max_footprint = max(1.5, sum_co2)
     # fig.update_yaxes(range=[0, 160])
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -298,11 +330,17 @@ def collapse_icon(elemid: str):
     # componentHandler.upgradeElement(tooltip)
     return icon_container
 
+
 def collapse_note():
     note = document.createElement("span")
     note.className = "mdl-color-text--grey-600"
-    note.appendChild(document.createTextNode("Note: click the gear icons to hide or expand configuration sections for TinyML and ACT"))
+    note.appendChild(
+        document.createTextNode(
+            "Note: click the gear icons to hide or expand configuration sections for TinyML and ACT"
+        )
+    )
     return note
+
 
 def text_node(text: str):
     el = document.createElement("div")
@@ -352,7 +390,7 @@ class App:
         act["cpu_count"]["selected"] = 0
         _common_presets(tinyml, act)
         return self.build(None)
-    
+
     def collapse(self, state, key, _):
         state[key] = not state[key]
         return self.build(None)
@@ -409,7 +447,9 @@ class App:
 
         act_container = document.createElement("div")
         act_container.className = "calcsection"
-        act_container.appendChild(document.createTextNode("Traditional Server (ACT Dell R740 Server)"))
+        act_container.appendChild(
+            document.createTextNode("Traditional Server (ACT Dell R740 Server)")
+        )
 
         ci_act = collapse_icon("act_collapse")
         add_event_listener(
@@ -466,8 +506,12 @@ class App:
         inference_elem_id = "inference_graph"
         inference_el.setAttribute("id", inference_elem_id)
         graph_container.appendChild(inference_el)
+        scale_act = {0: 1, 1: 2, 2: 4, 3: 8}[self.state["act"]["cpu_count"]["selected"]]
         plot_inferences(
-            self.state, elem_id=inference_elem_id, scale_tinyml=scale_tinyml
+            self.state,
+            elem_id=inference_elem_id,
+            scale_tinyml=scale_tinyml,
+            scale_act=scale_act,
         )
 
         graph_el = document.createElement("div")
